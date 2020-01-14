@@ -30,7 +30,7 @@ Looking at the [Python Docker Hub page](https://hub.docker.com/_/python), it loo
 Let's start the Alpine container, mounting the EXT4 image created earlier, to /my-rootfs:
 
 ```
-docker run -it --rm -v /tmp/my-rootfs:/my-rootfs python:3.8.1-alpine3.11`
+docker run -it --rm -v /tmp/my-rootfs:/my-rootfs python:3.8.1-alpine3.11 sh
 ```
 
 Then, inside the container, install the OpenRC init system, and some basic tools:
