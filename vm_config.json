@@ -1,0 +1,36 @@
+ 
+{
+  "boot-source": {
+    "kernel_image_path": "hwrandom-vsock.vmlinux",
+    "boot_args": "console=ttyS0 noapic reboot=k panic=1 pci=off random.trust_cpu=on nomodules rw"
+  },
+  "drives": [
+    {
+      "drive_id": "rootfs",
+      "path_on_host": "python-alpine.ext4",
+      "is_root_device": true,
+      "is_read_only": false
+    },
+      {
+          "drive_id": "code",
+          "path_on_host": "code.ext4",
+          "is_root_device": false,
+          "is_read_only": false
+      }
+  ],
+  "machine-config": {
+    "vcpu_count": 2,
+    "mem_size_mib": 1024,
+    "ht_enabled": false
+  },
+    "network-interfaces": [{
+        "iface_id": "2a:bf:b2:57:cc:ec",
+        "host_dev_name": "tap0"
+    }],
+  "vsock": 
+      {
+      "vsock_id": "1",
+      "guest_cid": 3,
+      "uds_path": "./v.sock"
+    }
+}
