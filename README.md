@@ -1,13 +1,14 @@
 # Firecracker Notes
 
-Building from a Docker image:
+Building a filesystem from a Docker image:
 
 https://github.com/firecracker-microvm/firecracker/blob/master/docs/rootfs-and-kernel-setup.md
 
+First, create an empty file, 500 megabytes big:
 
-`dd if=/dev/zero of=/rootfs.ext4 bs=1M count=50`
+`dd if=/dev/zero of=rootfs.ext4 bs=1M count=500`
 
-Create an empty file system on the file you created:
+Create an EXT4 file system on the file you created:
 
 `mkfs.ext4 rootfs.ext4`
 
@@ -21,14 +22,15 @@ sudo mount rootfs.ext4 /tmp/my-rootfs
 
 The minimal init system would be just an ELF binary, placed at /sbin/init. The final step in the Linux boot process executes /sbin/init and expects it to never exit. More complex init systems build on top of this, providing service configuration files, startup / shutdown scripts for various services, and many other features.
 
-For the sake of simplicity, let's set up an Alpine-based rootfs, with OpenRC as an init system. To that end, we'll use the official Docker image for Alpine Linux:
+For the sake of simplicity, let's set up an Alpine-based rootfs, with OpenRC as an init system. To that end, we'll use the official Docker image for Python, which extends Alpine. 
+
+Looking at the [Python Docker Hub page](https://hub.docker.com/_/python), it looks like we want the tag `3.8.1-alpine3.11`.
 
 
-
-First, let's start the Alpine container, bind-mounting the EXT4 image created earlier, to /my-rootfs:
+Let's start the Alpine container, mounting the EXT4 image created earlier, to /my-rootfs:
 
 ```
-docker run -it --rm -v /tmp/my-rootfs:/my-rootfs alpine
+docker run -it --rm -v /tmp/my-rootfs:/my-rootfs python:3.8.1-alpine3.11`
 ```
 
 Then, inside the container, install the OpenRC init system, and some basic tools:
@@ -56,7 +58,6 @@ for d in bin etc lib root sbin usr; do tar c "$d" | tar x -C /my-rootfs; done
 for dir in dev proc run sys var; do mkdir /my-rootfs/${dir}; done
 for dir in cache run; do mkdir /my-rootfs/var/${dir}; done
 mkdir /my-rootfs/var/cache/apk
-
 ```
 
 Finally, we need to make sure we automatically login as the root user. 
@@ -67,7 +68,7 @@ vi /etc/init.d/agetty.ttyS0
 
 At the line with `command_args_foreground`, add "-a root" in front of the rest of the commands. This logs in as root automatically. (Do a `man agetty` in order to see more options here.) 
 
-# All done, exit docker shell
+All done now, exit docker shell
 
 ```
 exit
@@ -79,6 +80,7 @@ Finally, unmount your rootfs image:
 sudo umount /tmp/my-rootfs
 ```
 
+Now, we should be able to start up the filesystem using the included kernel.
 
 
 # Setting Up the Network On the Host
