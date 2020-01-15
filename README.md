@@ -161,7 +161,7 @@ Make sure to replace the `iface_id` with the actual MAC address on your machine.
 firecracker --config-file first-config.json
 ```
 
-# Networking on the VM
+# Enable Networking on the VM
 
 In the VM, bring up the network:
 
@@ -177,7 +177,7 @@ With this, we should be able to ping Google, ensuring we've got a running system
 ping google.com
 ```
 
-# Make Networking Happen on Startup
+# Enable Networking on Startup
 
 Great! We don't want to have to do this every time we run the machine. So let's first automatically login as the root user on our machine:
 
@@ -196,7 +196,7 @@ This brings up the ethernet on startup. Now if we issue a `reboot` in the shell,
 
 :neat:
 
-# Taking Care of Entropy
+# Ensuring Adequate Entropy
 
 Trying to start Python, I get an error about entropy, and it just hangs. Can't run a server, and I can't run `pip`.
 
