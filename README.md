@@ -63,7 +63,7 @@ mkdir /my-rootfs/var/cache/apk
 Finally, we need to make sure we automatically login as the root user. 
 
 ```
-vi /etc/init.d/agetty.ttyS0
+vi /my-rootfs/etc/init.d/agetty.ttyS0
 ```
 
 At the line with `command_args_foreground`, add "-a root" in front of the rest of the commands. This logs in as root automatically. (Do a `man agetty` in order to see more options here.) 
@@ -80,12 +80,55 @@ Finally, unmount your rootfs image:
 sudo umount /tmp/my-rootfs
 ```
 
-Now, we should be able to start up the filesystem using the included kernel.
+Now, we should be able to start up the filesystem using the included kernel. To do that, we need to first write a configuration file.
 
+# Writing A Configuration File for Firecracker
+
+The configuration file for Firecracker is relatively simple. At a minimum, we specify a kernel to boot, flags for the kernel, and a filesystem to mount. 
+
+Optionally, we can add the number of CPUs and the amount of memory we'd like to be available for our microVM:
+
+```json
+{
+  "boot-source": {
+    "kernel_image_path": "hwrandom-vsock.vmlinux",
+    "boot_args": "console=ttyS0 noapic reboot=k panic=1 pci=off random.trust_cpu=on nomodules rw"
+  },
+  "drives": [
+    {
+      "drive_id": "rootfs",
+      "path_on_host": "rootfs.ext4",
+      "is_root_device": true,
+      "is_read_only": false
+    }
+  ],
+  "machine-config": {
+    "vcpu_count": 2,
+    "mem_size_mib": 1024,
+    "ht_enabled": false
+  }
+}
+```
+
+Save this JSON file as `first-config.json`, and run it using the following command:
+
+```bash
+firecracker --config-file first-config.json
+```
+
+With that, we should spin up our microVM, and be dropped right into an `sh` instance.
+
+Try running `python3` to verify everything worked. You can exit Python3 by typing in `exit()`.
 
 # Setting Up the Network On the Host
 
-Set up the network interface on the host!
+If we try running `ping google.com` inside of our new microVM, nothing happens. That's because we haven't set up any networking yet.
+
+We'll set up a `tap` interface on our underlying host, and then make that available for our microVM. So let's begin on the host.
+
+You can exit the microVM by typing `reboot`.
+
+Let's add the `tap` interface on the host machine:
 
 ```bash
 sudo ip tuntap add tap0 mode tap # user $(id -u) group $(id -g)
@@ -103,10 +146,19 @@ DEVICE_NAME=eth0
 MAC="$(cat /sys/class/net/tap0/address)"
 ```
 
-Start VM:
+Great! Now that we've got a mac address, we need to add it to our `first_config.json`:
 
+```json
+    "network-interfaces": [{
+        "iface_id": "aa:bb:cc:dd:ee:ff",
+        "host_dev_name": "tap0"
+    }],
 ```
-sudo firectl --kernel=hello-vmlinux.bin --root-drive=rootfs.ext4  --kernel-opts="console=ttyS0 noapic reboot=k panic=1 pci=off nomodules rw" --tap-device=tap0/$MAC
+
+Make sure to replace the `iface_id` with the actual MAC address on your machine. With that change, we can bring back up the VM:
+
+```bash
+firecracker --config-file first-config.json
 ```
 
 # Networking on the VM
@@ -125,7 +177,7 @@ With this, we should be able to ping Google, ensuring we've got a running system
 ping google.com
 ```
 
-# Taking Care of Startup
+# Make Networking Happen on Startup
 
 Great! We don't want to have to do this every time we run the machine. So let's first automatically login as the root user on our machine:
 
