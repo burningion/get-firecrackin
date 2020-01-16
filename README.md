@@ -136,14 +136,26 @@ sudo ip addr add 172.20.0.1/24 dev tap0
 sudo ip link set tap0 up
 ```
 
-Set your main interface device. If you have different name check it with ifconfig command
+Set your main interface device. Check to make sure you've got the right adapter with `ifconfig` command. It should have an IP address assigned to it, if you've got internet on the host machine.
 
 ```
 DEVICE_NAME=eth0
 ```
 
+Next, we need to set up iptables rules to enable packet forwarding:
+
+```
+sudo sh -c "echo 1 > /proc/sys/net/ipv4/ip_forward"
+sudo iptables -t nat -A POSTROUTING -o $DEVICE_NAME -j MASQUERADE
+sudo iptables -A FORWARD -m conntrack --ctstate RELATED,ESTABLISHED -j ACCEPT
+sudo iptables -A FORWARD -i tap0 -o $DEVICE_NAME -j ACCEPT
+```
+
+With this, we can grab our MAC address for the `tap0` device, and get ready to boot Firecracker with it:
+
 ```
 MAC="$(cat /sys/class/net/tap0/address)"
+echo $MAC
 ```
 
 Great! Now that we've got a mac address, we need to add it to our `first_config.json`:
