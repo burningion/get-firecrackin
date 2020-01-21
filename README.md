@@ -204,6 +204,8 @@ start() {
 }
 ```
 
+Next, add the `networking` script to the boot level requirements with a `rc-update add networking`.
+    
 This brings up the ethernet on startup. Now if we issue a `reboot` in the shell, we can see it all spin up.
 
 :neat:
