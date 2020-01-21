@@ -219,10 +219,10 @@ We need to add entropy to the virtual machine! It starts with 1 bit of entropy a
 You check the entropy available on a virtual machine with:
 
 ```
-cat /proc/sys/kernel/random/entropy_availk l.  
+cat /proc/sys/kernel/random/entropy_avail
 ```
 
-On Alpine, done with haveged
+On Alpine, this _could be_ done with haveged:
 
 ```
 apk add haveged
@@ -230,7 +230,7 @@ haveged -w 1024
 cat /proc/sys/kernel/random/entropy_avail
 ```
 
-OR
+OR, instead, we could use the hardware random built into most modern CPUs. It's enabled in the kernel.
 
 Build the Linux kernel with `CONFIG_RANDOM_TRUST_CPU=y` built in.
 
@@ -244,15 +244,15 @@ If it works, you should see:
 random: crng done (trusting CPU's manufacturer)
 ```
 
-In the startup of your kernel.
-
-
+In the startup of your kernel. (The kernel included in this repo already has it enabled.)
 
 # VSocks
 
-Needed to rebuild the Linux kernel for the machine all over again, this time enabling support for VirtIO, Vsock, and KVM.
+Once I got adequate entropy in the VM, I wanted a way to send files or configuration startup. 
 
-This works, the command they give you doesn't:
+For that, I needed to rebuild the Linux kernel for the machine all over again, this time enabling support for VirtIO, Vsock, and KVM.
+
+If you want to create a vsock, you _should_ be able to generate on using the following API request to the Firecracker socket:
 
 ```
 curl --unix-socket /tmp/firecracker.socket -X PUT 'http://localhost/vsock'   -d '{
