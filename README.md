@@ -261,3 +261,7 @@ curl --unix-socket /tmp/firecracker.socket -X PUT 'http://localhost/vsock'   -d 
       "uds_path": "./root"
     }'
 ```
+
+When I tried running the examples included in the Firecracker repos, I couldn't reproduce the existing VSock functionality. I'd have a socket sitting there, but wouldn't be able to connect to the bound port in the Guest.
+
+# Sending Files on Startup
